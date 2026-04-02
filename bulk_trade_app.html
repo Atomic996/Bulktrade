@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BULK Trade Bot</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --surface: #0d1117;
+    --border: #1a2030;
+    --accent: #00ff88;
+    --accent2: #0088ff;
+    --danger: #ff3355;
+    --text: #e8eaf0;
+    --muted: #4a5568;
+    --card: #111827;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    color: #000;
+  }
+
+  .logo-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  .dot.connected { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+  .dot.error { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Form elements */
+  .input-group {
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+  }
+
+  input[type="password"] { letter-spacing: 3px; }
+
+  select option { background: var(--surface); }
+
+  /* Buttons */
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    width: 100%;
+  }
+
+  .btn-primary:hover { background: #00cc6e; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    width: 100%;
+  }
+
+  .btn-danger:hover { background: rgba(255,51,85,0.1); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    width: 100%;
+  }
+
+  .btn-secondary:hover { background: rgba(0,136,255,0.1); }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* Stats */
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .stat-value.positive { color: var(--accent); }
+  .stat-value.negative { color: var(--danger); }
+  .stat-value.neutral { color: var(--text); }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Side selector */
+  .side-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .side-btn {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .side-btn.buy { color: var(--accent); }
+  .side-btn.sell { color: var(--danger); }
+  .side-btn.buy.active { background: rgba(0,255,136,0.15); border-color: var(--accent); }
+  .side-btn.sell.active { background: rgba(255,51,85,0.15); border-color: var(--danger); }
+
+  /* Log */
+  .log {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    height: 160px;
+    overflow-y: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+  }
+
+  .log::-webkit-scrollbar { width: 4px; }
+  .log::-webkit-scrollbar-track { background: transparent; }
+  .log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .log-entry { display: flex; gap: 8px; }
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-msg.success { color: var(--accent); }
+  .log-msg.error { color: var(--danger); }
+  .log-msg.info { color: var(--accent2); }
+  .log-msg.warn { color: #ffaa00; }
+
+  /* Position card */
+  .position-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+  }
+
+  .position-symbol { font-weight: 700; color: var(--text); }
+  .position-side { font-size: 10px; padding: 2px 8px; border-radius: 4px; }
+  .position-side.long { background: rgba(0,255,136,0.15); color: var(--accent); }
+  .position-side.short { background: rgba(255,51,85,0.15); color: var(--danger); }
+
+  /* Order history */
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .history-item:last-child { border-bottom: none; }
+
+  /* Leverage slider */
+  input[type="range"] {
+    padding: 0;
+    height: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .leverage-display {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 8px 0;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    transition: transform 0.3s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .tab.active {
+    background: var(--card);
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Loading spinner */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0,255,136,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  /* Warning */
+  .warning {
+    background: rgba(255,170,0,0.08);
+    border: 1px solid rgba(255,170,0,0.3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #ffaa00;
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+
+  .section-hidden { display: none; }
+
+  @media (max-width: 600px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">B</div>
+      <div>
+        <div class="logo-text">BULK BOT</div>
+        <div class="logo-sub">TESTNET TRADING</div>
+      </div>
+    </div>
+    <div class="status-dot">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">غير متصل</span>
+    </div>
+  </div>
+
+  <!-- Login Section -->
+  <div id="loginSection">
+    <div class="card">
+      <div class="card-title">🔑 تسجيل الدخول</div>
+
+      <div class="warning">
+        ⚠️ مفتاحك يبقى في متصفحك فقط ولا يُرسل لأي سيرفر خارجي. استخدم محفظة مخصصة للتداول فقط.
+      </div>
+
+      <div class="input-group">
+        <label>PRIVATE KEY (BASE58)</label>
+        <input type="password" id="privateKeyInput" placeholder="أدخل مفتاحك الخاص هنا..." />
+      </div>
+
+      <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">
+        تسجيل الدخول والاتصال بـ bulk.trade
+      </button>
+    </div>
+  </div>
+
+  <!-- Trading Section -->
+  <div id="tradingSection" class="section-hidden">
+
+    <!-- Account Stats -->
+    <div class="card">
+      <div class="card-title">💰 الحساب</div>
+      <div class="grid-3">
+        <div class="stat">
+          <div class="stat-value neutral" id="totalBalance">$0</div>
+          <div class="stat-label">الرصيد الكلي</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value neutral" id="availableBalance">$0</div>
+          <div class="stat-label">المتاح</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value neutral" id="unrealizedPnl">$0</div>
+          <div class="stat-label">PnL</div>
+        </div>
+      </div>
+      <div style="margin-top:12px; text-align:left;">
+        <button class="btn btn-secondary" style="width:auto; padding:8px 16px; font-size:11px;" onclick="refreshAccount()">
+          ↻ تحديث
+        </button>
+        <button class="btn btn-danger" style="width:auto; padding:8px 16px; font-size:11px; margin-right:8px;" onclick="handleLogout()">
+          خروج
+        </button>
+      </div>
+    </div>
+
+    <!-- Trade Panel -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🚀 فتح صفقة</div>
+
+        <!-- Side -->
+        <div class="side-selector">
+          <button class="side-btn buy active" id="buyBtn" onclick="setSide('buy')">▲ شراء</button>
+          <button class="side-btn sell" id="sellBtn" onclick="setSide('sell')">▼ بيع</button>
+        </div>
+
+        <!-- Symbol -->
+        <div class="input-group">
+          <label>الزوج</label>
+          <select id="symbolSelect">
+            <option value="BTC-USD">BTC/USD</option>
+            <option value="ETH-USD">ETH/USD</option>
+            <option value="SOL-USD">SOL/USD</option>
+            <option value="XRP-USD">XRP/USD</option>
+            <option value="GOLD-USD">GOLD/USD</option>
+          </select>
+        </div>
+
+        <!-- Size -->
+        <div class="input-group">
+          <label>الحجم</label>
+          <input type="number" id="sizeInput" value="0.001" step="0.001" min="0.001" />
+        </div>
+
+        <!-- Leverage -->
+        <div class="input-group">
+          <label>الرافعة</label>
+          <div class="leverage-display"><span id="leverageVal">1</span>x</div>
+          <input type="range" id="leverageSlider" min="1" max="50" value="1"
+            oninput="document.getElementById('leverageVal').textContent=this.value" />
+        </div>
+
+        <button class="btn btn-primary" id="placeOrderBtn" onclick="placeOrder()">
+          فتح الصفقة
+        </button>
+      </div>
+
+      <!-- Positions & History -->
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">📈 الصفقات المفتوحة</div>
+          <div id="positionsList">
+            <div style="color:var(--muted); font-size:12px; font-family:'Space Mono',monospace; text-align:center; padding:20px;">
+              لا توجد صفقات
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📜 آخر الصفقات</div>
+          <div id="historyList">
+            <div style="color:var(--muted); font-size:12px; font-family:'Space Mono',monospace; text-align:center; padding:20px;">
+              لا يوجد سجل
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <div class="card-title">📡 السجل</div>
+      <div class="log" id="logContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl-fast.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+// الإعدادات
+// ══════════════════════════════════════════
+const PRIVY_APP_ID  = "cmbuls93q01jol20lf0ak0plb";
+const PRIVY_CA_ID   = "7a527651-130e-4393-824a-3acdaf3e42d4";
+const PRIVY_URL     = "https://auth.privy.io/api/v1";
+const BULK_API      = "https://early.bulk.trade/api/proxy/api/v1";
+const WS_URL        = "wss://exchange-ws1.bulk.trade";
+
+let state = {
+  sk: null,
+  wallet: null,
+  walletId: null,
+  token: null,
+  side: "buy",
+  ws: null,
+};
+
+// ══════════════════════════════════════════
+// مكتبة Crypto
+// ══════════════════════════════════════════
+
+function b58decode(str) {
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let bytes = [0];
+  for (let c of str) {
+    let carry = ALPHABET.indexOf(c);
+    if (carry < 0) throw new Error('Invalid base58 char');
+    for (let i = 0; i < bytes.length; i++) {
+      carry += bytes[i] * 58;
+      bytes[i] = carry & 0xff;
+      carry >>= 8;
+    }
+    while (carry > 0) { bytes.push(carry & 0xff); carry >>= 8; }
+  }
+  for (let c of str) { if (c === '1') bytes.push(0); else break; }
+  return new Uint8Array(bytes.reverse());
+}
+
+function b58encode(bytes) {
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let digits = [0];
+  for (let b of bytes) {
+    let carry = b;
+    for (let i = 0; i < digits.length; i++) {
+      carry += digits[i] << 8;
+      digits[i] = carry % 58;
+      carry = Math.floor(carry / 58);
+    }
+    while (carry > 0) { digits.push(carry % 58); carry = Math.floor(carry / 58); }
+  }
+  let result = '';
+  for (let b of bytes) { if (b === 0) result += '1'; else break; }
+  return result + digits.reverse().map(d => ALPHABET[d]).join('');
+}
+
+function b64encode(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function loadKeypair(pk58) {
+  const raw = b58decode(pk58);
+  const secret = raw.slice(0, 32);
+  const kp = nacl.sign.keyPair.fromSeed(secret);
+  return kp;
+}
+
+function getAddress(kp) {
+  return b58encode(kp.publicKey);
+}
+
+function signMessage(kp, message) {
+  const msgBytes = new TextEncoder().encode(message);
+  const sig = nacl.sign.detached(msgBytes, kp.secretKey);
+  return b64encode(sig);
+}
+
+function signBytes(kp, bytes) {
+  const sig = nacl.sign.detached(bytes, kp.secretKey);
+  return b64encode(sig);
+}
+
+// ══════════════════════════════════════════
+// Privy Auth
+// ══════════════════════════════════════════
+
+function privyHeaders(extra = {}) {
+  const h = {
+    "Content-Type": "application/json",
+    "Privy-App-Id": PRIVY_APP_ID,
+    "Privy-Ca-Id":  PRIVY_CA_ID,
+    "Privy-Client": "react-auth:3.11.0",
+    "Origin":       "https://early.bulk.trade",
+  };
+  if (state.token) h["Authorization"] = `Bearer ${state.token}`;
+  return { ...h, ...extra };
+}
+
+function buildSIWSMessage(address, nonce, issuedAt) {
+  return `early.bulk.trade wants you to sign in with your Solana account:\n${address}\n\nYou are proving you own ${address}.\n\nURI: https://early.bulk.trade\nVersion: 1\nChain ID: mainnet\nNonce: ${nonce}\nIssued At: ${issuedAt}\nResources:\n- https://privy.io`;
+}
+
+async function privyLogin(kp, address) {
+  // init
+  const r1 = await fetch(`${PRIVY_URL}/siws/init`, {
+    method: "POST",
+    headers: privyHeaders(),
+    body: JSON.stringify({ address }),
+    credentials: "include",
+  });
+  const d1 = await r1.json();
+  if (!r1.ok) throw new Error(`init فشل: ${JSON.stringify(d1)}`);
+
+  const nonce = d1.nonce;
+  const exp   = new Date(d1.expires_at);
+  const issuedAt = new Date(exp.getTime() - 3600000).toISOString().replace(/(\.\d{3})\d*Z/, '$1Z');
+
+  const message   = buildSIWSMessage(address, nonce, issuedAt);
+  const signature = signMessage(kp, message);
+
+  // authenticate
+  const r2 = await fetch(`${PRIVY_URL}/siws/authenticate`, {
+    method: "POST",
+    headers: privyHeaders(),
+    credentials: "include",
+    body: JSON.stringify({
+      connectorType:    "solana_adapter",
+      message,
+      message_type:     "plain",
+      mode:             "login-or-sign-up",
+      signature,
+      walletClientType: "Phantom",
+    }),
+  });
+  const d2 = await r2.json();
+  if (!r2.ok) throw new Error(`authenticate فشل: ${JSON.stringify(d2)}`);
+
+  state.token = d2.token || d2.access_token;
+
+  // استخراج wallet_id
+  const user = d2.user || {};
+  const accounts = user.linked_accounts || [];
+  for (const acc of accounts) {
+    if (acc.type === "wallet" && acc.wallet_client === "privy") {
+      state.walletId = acc.id || acc.wallet_id;
+      break;
+    }
+  }
+
+  return d2;
+}
+
+// ══════════════════════════════════════════
+// Bulk API
+// ══════════════════════════════════════════
+
+async function bulkPost(payload) {
+  const r = await fetch(`${BULK_API}/account`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Origin": "https://early.bulk.trade",
+      ...(state.token ? { "Authorization": `Bearer ${state.token}` } : {}),
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function getAccount() {
+  const r = await bulkPost({ type: "fullAccount", user: state.wallet });
+  if (Array.isArray(r) && r[0]) return r[0].fullAccount || {};
+  return {};
+}
+
+async function getOrderHistory() {
+  const r = await bulkPost({ type: "orderHistory", user: state.wallet });
+  return Array.isArray(r) ? r : [];
+}
+
+// ══════════════════════════════════════════
+// WebSocket Trading
+// ══════════════════════════════════════════
+
+function connectWebSocket() {
+  if (state.ws) state.ws.close();
+
+  state.ws = new WebSocket(WS_URL);
+
+  state.ws.onopen = () => {
+    log("WebSocket متصل ✓", "success");
+    setStatus("connected");
+    // اشتراك في الحساب
+    state.ws.send(JSON.stringify({
+      method: "subscribe",
+      id: 1,
+      subscription: [{ type: "account", user: state.wallet }]
+    }));
+  };
+
+  state.ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      const inner = data.data || {};
+      const type  = inner.type || "";
+
+      if (type === "fill") {
+        log(`✅ نُفِّذت: ${inner.symbol} @ $${inner.price}`, "success");
+        showToast(`صفقة نُفِّذت: ${inner.symbol} @ $${inner.price}`, "success");
+        refreshAccount();
+      } else if (type === "orderUpdate") {
+        log(`📊 أمر: ${inner.status} - ${inner.symbol}`, "info");
+      } else if (type === "positionUpdate") {
+        log(`📈 مركز: ${inner.symbol} size=${inner.size}`, "info");
+        refreshAccount();
+      } else if (type === "accountSnapshot") {
+        log("📸 حساب محدّث", "info");
+      }
+
+      // استجابة placeOrder
+      if (data.id === 10001) {
+        const payload = data.data?.payload || {};
+        if (payload.status === "ok") {
+          log(`✅ الصفقة قُبلت!`, "success");
+        } else {
+          log(`⚠️ استجابة: ${JSON.stringify(data)}`, "warn");
+        }
+        document.getElementById("placeOrderBtn").disabled = false;
+        document.getElementById("placeOrderBtn").textContent = "فتح الصفقة";
+      }
+    } catch(e) {}
+  };
+
+  state.ws.onclose = () => {
+    log("WebSocket انقطع", "warn");
+    setStatus("disconnected");
+    // إعادة الاتصال بعد 3 ثواني
+    setTimeout(() => { if (state.wallet) connectWebSocket(); }, 3000);
+  };
+
+  state.ws.onerror = (e) => {
+    log("خطأ في WebSocket", "error");
+  };
+}
+
+async function placeOrder() {
+  const symbol     = document.getElementById("symbolSelect").value;
+  const size       = document.getElementById("sizeInput").value;
+  const leverage   = document.getElementById("leverageSlider").value;
+  const side       = state.side;
+  const isB        = side === "buy";
+  const nonce      = Date.now();
+
+  const btn = document.getElementById("placeOrderBtn");
+  btn.disabled = true;
+  btn.innerHTML = `إرسال <span class="spinner"></span>`;
+
+  log(`🚀 فتح ${side.toUpperCase()} ${symbol} | ${size} | ${leverage}x`, "info");
+
+  try {
+    if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+      throw new Error("WebSocket غير متصل");
+    }
+
+    const action = { b: isB, c: symbol, r: false, sz: size };
+
+    // بناء payload للتوقيع
+    const payloadForSign = {
+      account: state.wallet,
+      actions: [{ m: action }],
+      nonce,
+      type: "action",
+    };
+    const payloadBytes = new TextEncoder().encode(JSON.stringify(payloadForSign));
+    const payloadB64   = b64encode(payloadBytes);
+
+    // توقيع مباشر بالـ Private Key
+    const signature = signBytes(state.sk.secretKey ? state.sk : { secretKey: state.sk.secretKey }, new TextEncoder().encode(payloadB64));
+
+    const actionPayload = {
+      account:   state.wallet,
+      actions:   [{ m: action }],
+      nonce,
+      signature,
+      signer:    state.wallet,
+      type:      "action",
+    };
+
+    state.ws.send(JSON.stringify({
+      method:  "post",
+      id:      10001,
+      request: { type: "action", payload: actionPayload }
+    }));
+
+    log("📤 الصفقة أُرسلت للـ WebSocket...", "info");
+
+  } catch(e) {
+    log(`❌ خطأ: ${e.message}`, "error");
+    btn.disabled = false;
+    btn.textContent = "فتح الصفقة";
+  }
+}
+
+// ══════════════════════════════════════════
+// UI Functions
+// ══════════════════════════════════════════
+
+async function handleLogin() {
+  const pk = document.getElementById("privateKeyInput").value.trim();
+  if (!pk) return showToast("أدخل المفتاح الخاص", "error");
+
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  btn.innerHTML = `جاري تسجيل الدخول <span class="spinner"></span>`;
+
+  try {
+    const kp      = loadKeypair(pk);
+    const address = getAddress(kp);
+    state.sk     = kp;
+    state.wallet = address;
+
+    log(`🔑 المحفظة: ${address.slice(0,8)}...${address.slice(-6)}`, "info");
+
+    await privyLogin(kp, address);
+    log("✅ تسجيل الدخول نجح!", "success");
+    log(`🏦 محفظة Privy: ${state.walletId || "غير موجودة"}`, "info");
+
+    // إظهار قسم التداول
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("tradingSection").classList.remove("section-hidden");
+
+    // تحديث الحساب
+    await refreshAccount();
+
+    // الاتصال بـ WebSocket
+    connectWebSocket();
+
+    showToast("تم تسجيل الدخول بنجاح!", "success");
+
+  } catch(e) {
+    log(`❌ ${e.message}`, "error");
+    showToast("فشل تسجيل الدخول", "error");
+    btn.disabled = false;
+    btn.textContent = "تسجيل الدخول والاتصال بـ bulk.trade";
+  }
+}
+
+async function refreshAccount() {
+  try {
+    const account = await getAccount();
+    const margin  = account.margin || {};
+
+    const total     = margin.totalBalance || 0;
+    const available = margin.availableBalance || 0;
+    const pnl       = margin.unrealizedPnl || 0;
+
+    document.getElementById("totalBalance").textContent     = `$${total.toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    document.getElementById("availableBalance").textContent = `$${available.toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+
+    const pnlEl = document.getElementById("unrealizedPnl");
+    pnlEl.textContent = `${pnl >= 0 ? '+' : ''}$${pnl.toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    pnlEl.className = `stat-value ${pnl > 0 ? 'positive' : pnl < 0 ? 'negative' : 'neutral'}`;
+
+    // الصفقات المفتوحة
+    const positions = account.positions || [];
+    const posEl = document.getElementById("positionsList");
+    if (positions.length === 0) {
+      posEl.innerHTML = `<div style="color:var(--muted);font-size:12px;font-family:'Space Mono',monospace;text-align:center;padding:20px;">لا توجد صفقات</div>`;
+    } else {
+      posEl.innerHTML = positions.map(p => {
+        const pnl = p.unrealizedPnl || 0;
+        const isLong = p.size > 0;
+        return `
+          <div class="position-item">
+            <div>
+              <div class="position-symbol">${p.symbol}</div>
+              <div style="color:var(--muted);font-size:10px;margin-top:2px;">size: ${Math.abs(p.size).toFixed(4)}</div>
+            </div>
+            <div style="text-align:center;">
+              <span class="position-side ${isLong ? 'long' : 'short'}">${isLong ? 'LONG' : 'SHORT'}</span>
+            </div>
+            <div style="text-align:left;">
+              <div style="color:${pnl >= 0 ? 'var(--accent)' : 'var(--danger)'}">
+                ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}
+              </div>
+              <div style="color:var(--muted);font-size:10px;">@$${(p.price||0).toFixed(2)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // آخر الصفقات
+    const history = await getOrderHistory();
+    const histEl  = document.getElementById("historyList");
+    if (history.length === 0) {
+      histEl.innerHTML = `<div style="color:var(--muted);font-size:12px;font-family:'Space Mono',monospace;text-align:center;padding:20px;">لا يوجد سجل</div>`;
+    } else {
+      histEl.innerHTML = history.slice(0, 5).map(o => {
+        const h = o.orderHistory || o;
+        const isBuy = h.side === "buy";
+        return `
+          <div class="history-item">
+            <span style="color:${isBuy ? 'var(--accent)' : 'var(--danger)'}">
+              ${isBuy ? '▲' : '▼'} ${h.symbol}
+            </span>
+            <span>${h.status}</span>
+            <span>$${parseFloat(h.price||0).toLocaleString('en')}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+  } catch(e) {
+    log(`⚠️ تعذّر تحديث الحساب: ${e.message}`, "warn");
+  }
+}
+
+function setSide(side) {
+  state.side = side;
+  document.getElementById("buyBtn").classList.toggle("active", side === "buy");
+  document.getElementById("sellBtn").classList.toggle("active", side === "sell");
+}
+
+function handleLogout() {
+  if (state.ws) state.ws.close();
+  state = { sk: null, wallet: null, walletId: null, token: null, side: "buy", ws: null };
+  document.getElementById("loginSection").style.display = "block";
+  document.getElementById("tradingSection").classList.add("section-hidden");
+  document.getElementById("privateKeyInput").value = "";
+  document.getElementById("loginBtn").disabled = false;
+  document.getElementById("loginBtn").textContent = "تسجيل الدخول والاتصال بـ bulk.trade";
+  setStatus("disconnected");
+  log("👋 تم تسجيل الخروج", "info");
+}
+
+function setStatus(s) {
+  const dot  = document.getElementById("statusDot");
+  const text = document.getElementById("statusText");
+  dot.className = "dot";
+  if (s === "connected")    { dot.classList.add("connected"); text.textContent = "متصل"; }
+  else if (s === "error")   { dot.classList.add("error");     text.textContent = "خطأ"; }
+  else                       { text.textContent = "غير متصل"; }
+}
+
+function log(msg, type = "info") {
+  const container = document.getElementById("logContainer");
+  const now = new Date().toLocaleTimeString("ar", { hour12: false });
+  const entry = document.createElement("div");
+  entry.className = "log-entry";
+  entry.innerHTML = `<span class="log-time">[${now}]</span><span class="log-msg ${type}">${msg}</span>`;
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+let toastTimer;
+function showToast(msg, type = "info") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = "toast", 3000);
+}
+</script>
+</body>
+</html>
